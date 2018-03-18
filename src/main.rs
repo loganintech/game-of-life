@@ -104,7 +104,7 @@ impl Board {
 
                 let new_tile = match adjacent_tiles {
                     x if x < 2 => Tile::Dead,
-                    x if x == 2 || x == 3 => Tile::Alive,
+                    x if (x == 2 || x == 3) && self.tiles[x_across][y_down] != Tile::Dead => Tile::Alive,
                     x if x > 3 => Tile::Dead,
                     x if x == 3 && self.tiles[x_across][y_down] == Tile::Dead => Tile::Alive,
                     _ => Tile::Dead,
@@ -204,11 +204,17 @@ fn main() {
         }
     }
 
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2) as usize] = Tile::Alive;
     starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 - 1) as usize] = Tile::Alive;
     starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2 - 1) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+
+    //Tub
+    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2 + 1) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 + 2) as usize] = Tile::Alive;
+
 
     let mut game = Game {
         gl: GlGraphics::new(opengl),
@@ -221,7 +227,7 @@ fn main() {
     };
 
     let mut event_settings = EventSettings::new();
-    event_settings.ups = 12;
+    event_settings.ups = 1;
     event_settings.max_fps = 250;
 
     let mut events = Events::new(event_settings);
