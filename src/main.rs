@@ -18,23 +18,20 @@ impl Game {
     fn render(&mut self, arg: &RenderArgs) {
         use graphics;
 
-        //RGBA = Black
-        let WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-        let BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+        // let white: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+        let black: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
         self.gl.draw(arg.viewport(), |_c, gl| {
-            graphics::clear(BLACK, gl);
+            graphics::clear(black, gl);
         });
 
         self.board.render(&mut self.gl, arg);
     }
 
     fn update(&mut self, arg: &UpdateArgs) -> bool {
-
         // println!("Game Update");
 
         self.board.update(arg)
-
     }
 }
 
@@ -49,13 +46,12 @@ impl Board {
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
         // println!("Board Render");
 
-        let WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-        let BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+        let white: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+        let black: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
         let mut squares: Vec<Vec<graphics::types::Rectangle>> = Vec::new();
 
         for x in 0..self.tiles.len() {
-
             squares.push(Vec::new());
 
             for y in 0..self.tiles[x].len() {
@@ -73,30 +69,24 @@ impl Board {
             for x in 0..self.tiles.len() {
                 for y in 0..self.tiles[x].len() {
                     let new_tile = self.tiles[x][y];
-                    
+
                     let color = match new_tile {
-                        Tile::Alive => WHITE,
-                        Tile::Dead => BLACK,
+                        Tile::Alive => white,
+                        Tile::Dead => black,
                     };
-                    
 
                     graphics::rectangle(color, squares[x][y], transform, gl)
-
                 }
             }
-
-
         });
 
         // println!("{:?}", self.tiles);
     }
 
-    fn update(&mut self, args: &UpdateArgs) -> bool {
-
+    fn update(&mut self, _args: &UpdateArgs) -> bool {
         let mut new_tiles: Vec<Vec<Tile>> = Vec::new();
 
         for x_across in 0..self.tiles.len() {
-
             new_tiles.push(Vec::new());
 
             for y_down in 0..self.tiles[x_across].len() {
@@ -104,7 +94,9 @@ impl Board {
 
                 let new_tile = match adjacent_tiles {
                     x if x < 2 => Tile::Dead,
-                    x if (x == 2 || x == 3) && self.tiles[x_across][y_down] != Tile::Dead => Tile::Alive,
+                    x if (x == 2 || x == 3) && self.tiles[x_across][y_down] != Tile::Dead => {
+                        Tile::Alive
+                    }
                     x if x > 3 => Tile::Dead,
                     x if x == 3 && self.tiles[x_across][y_down] == Tile::Dead => Tile::Alive,
                     _ => Tile::Dead,
@@ -199,22 +191,24 @@ fn main() {
     for width in 0..window_width / scale {
         starting_tiles.push(Vec::with_capacity((window_height / scale) as usize));
 
-        for height in 0..window_height / scale {
+        for _ in 0..window_height / scale {
             starting_tiles[width as usize].push(Tile::Dead);
         }
     }
 
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 - 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2 - 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2) as usize] =
+        Tile::Alive;
+    starting_tiles[(window_width / scale / 2 + 1) as usize][(window_height / scale / 2) as usize] =
+        Tile::Alive;
+    starting_tiles[(window_width / scale / 2 + 2) as usize][(window_height / scale / 2) as usize] =
+        Tile::Alive;
 
-    //Tub
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2 + 1) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2 - 1) as usize][(window_height / scale / 2 + 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 + 2) as usize] = Tile::Alive;
-
+    starting_tiles[(window_width / scale / 2 - 1) as usize]
+        [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 + 1) as usize] =
+        Tile::Alive;
+    starting_tiles[(window_width / scale / 2 + 1) as usize]
+        [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
 
     let mut game = Game {
         gl: GlGraphics::new(opengl),
@@ -227,7 +221,7 @@ fn main() {
     };
 
     let mut event_settings = EventSettings::new();
-    event_settings.ups = 1;
+    event_settings.ups = 4;
     event_settings.max_fps = 250;
 
     let mut events = Events::new(event_settings);
