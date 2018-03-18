@@ -11,10 +11,10 @@ Conway's game of life is a cellular automation game designed by John Horton Conw
 * Any live cell with more than three neighbors dies from overpopulation
 * Any dead cell with three live neighbors is born again
 
-## Current Starting Configuration
+## Run
 
-![](https://i.imgur.com/5lTYzh6.png)
+You can run with
 
-## In Motion
-
-![](https://i.imgur.com/Qv7jf8D.gif)
+~~~
+cargo run
+~~~
