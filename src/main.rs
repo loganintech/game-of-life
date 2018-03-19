@@ -40,7 +40,7 @@ impl Game {
     }
 
     fn input(&mut self, btn: &Button, mouse_pos: Option<[f64; 2]>) {
-        if btn == &Button::Keyboard(Key::Return) {
+        if btn == &Button::Keyboard(Key::Return) || btn == &Button::Keyboard(Key::Space) {
             self.running = !self.running;
         }
 
