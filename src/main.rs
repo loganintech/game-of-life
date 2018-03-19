@@ -39,12 +39,13 @@ impl Game {
         true
     }
 
-    fn input(&mut self, btn: &Button, mouse_pos: Option<&[f64; 2]>) {
+    fn input(&mut self, btn: &Button, mouse_pos: Option<[f64; 2]>) {
         if btn == &Button::Keyboard(Key::Return) {
             self.running = !self.running;
         }
 
         if let Some(m) = mouse_pos {
+
             if btn == &Button::Mouse(MouseButton::Left) {
                 let x_across = m[0] / self.board.scale;
                 let y_down = m[1] / self.board.scale;
@@ -249,6 +250,8 @@ fn main() {
     event_settings.ups = 4;
     event_settings.max_fps = 250;
 
+    let mut last_mouse_location: Option<[f64; 2]> = None;
+
     let mut events = Events::new(event_settings);
     while let Some(e) = events.next(&mut window) {
         if let Some(r) = e.render_args() {
@@ -261,13 +264,18 @@ fn main() {
             }
         }
 
+        // println!("Events Called: {:?}", e);
+
+        match e {
+            Event::Input(Input::Move(Motion::MouseCursor(x, y))) => last_mouse_location = Some([x, y]),
+            _ => {}
+        }
+
         if let Some(b) = e.button_args() {
             if b.state == ButtonState::Press {
-                if let Some(m) = e.mouse_cursor_args() {
-                    game.input(&b.button, Some(&m));
-                } else {
-                    game.input(&b.button, None);
-                }
+
+                game.input(&b.button, last_mouse_location);
+
             }
         }
     }
