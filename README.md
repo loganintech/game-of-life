@@ -27,3 +27,8 @@ Enter - Play/Pause
 Click - Change Square State
 
 Scroll Wheel - Change Update Speed
+```
+
+## Demo
+
+![](https://i.imgur.com/oAKze58.gif)
