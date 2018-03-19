@@ -271,6 +271,19 @@ fn main() {
             _ => {}
         }
 
+        if let Some(s) = e.mouse_scroll_args() {
+
+            let mut event_settings = events.get_event_settings();
+            match s[1] as i32 {
+                1 => events.set_ups(event_settings.ups + 1),
+                -1 if event_settings.ups > 0 => events.set_ups(event_settings.ups - 1),
+                _ => {}
+            }
+            
+
+
+        }
+
         if let Some(b) = e.button_args() {
             if b.state == ButtonState::Press {
 

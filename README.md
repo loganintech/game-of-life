@@ -25,3 +25,5 @@ cargo run
 Enter - Play/Pause
 
 Click - Change Square State
+
+Scroll Wheel - Change Update Speed
