@@ -12,6 +12,7 @@ use opengl_graphics::{GlGraphics, OpenGL};
 pub struct Game {
     gl: GlGraphics,
     board: Board,
+    running: bool,
 }
 
 impl Game {
@@ -29,9 +30,32 @@ impl Game {
     }
 
     fn update(&mut self, arg: &UpdateArgs) -> bool {
-        // println!("Game Update");
+        if !self.running {
+            return true;
+        }
 
-        self.board.update(arg)
+        self.board.update(arg);
+
+        true
+    }
+
+    fn input(&mut self, btn: &Button, mouse_pos: Option<&[f64; 2]>) {
+        if btn == &Button::Keyboard(Key::Return) {
+            self.running = !self.running;
+        }
+
+        if let Some(m) = mouse_pos {
+            if btn == &Button::Mouse(MouseButton::Left) {
+                let x_across = m[0] / self.board.scale;
+                let y_down = m[1] / self.board.scale;
+
+                self.board.tiles[x_across as usize][y_down as usize] =
+                    match self.board.tiles[x_across as usize][y_down as usize] {
+                        Tile::Alive => Tile::Dead,
+                        Tile::Dead => Tile::Alive,
+                    };
+            }
+        }
     }
 }
 
@@ -218,6 +242,7 @@ fn main() {
             tile_width: (window_width / scale) as i32,
             tile_height: (window_height / scale) as i32,
         },
+        running: true,
     };
 
     let mut event_settings = EventSettings::new();
@@ -233,6 +258,16 @@ fn main() {
         if let Some(u) = e.update_args() {
             if !game.update(&u) {
                 break;
+            }
+        }
+
+        if let Some(b) = e.button_args() {
+            if b.state == ButtonState::Press {
+                if let Some(m) = e.mouse_cursor_args() {
+                    game.input(&b.button, Some(&m));
+                } else {
+                    game.input(&b.button, None);
+                }
             }
         }
     }
