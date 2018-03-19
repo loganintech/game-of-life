@@ -18,3 +18,10 @@ You can run with
 ~~~
 cargo run
 ~~~
+
+## Usage
+
+```
+Enter - Play/Pause
+
+Click - Change Square State
