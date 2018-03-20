@@ -68,6 +68,57 @@ struct Board {
 }
 
 impl Board {
+
+    fn new(scale: u32, window_width: u32, window_height: u32) -> Board {
+
+        let mut starting_tiles = Vec::new();
+
+        for width in 0..window_width / scale {
+            starting_tiles.push(Vec::with_capacity((window_height / scale) as usize));
+
+            for _ in 0..window_height / scale {
+                starting_tiles[width as usize].push(Tile::Dead);
+            }
+        }
+
+        starting_tiles[ (window_width / scale / 2)     as usize ][ (window_height / scale / 2)     as usize ] = Tile::Alive;
+        starting_tiles[ (window_width / scale / 2 + 1) as usize ][ (window_height / scale / 2)     as usize ] = Tile::Alive;
+        starting_tiles[ (window_width / scale / 2 + 2) as usize ][ (window_height / scale / 2)     as usize ] = Tile::Alive;
+        starting_tiles[ (window_width / scale / 2 - 1) as usize ][ (window_height / scale / 2 + 1) as usize ] = Tile::Alive;
+        starting_tiles[ (window_width / scale / 2)     as usize ][ (window_height / scale / 2 + 1) as usize ] = Tile::Alive;
+        starting_tiles[ (window_width / scale / 2 + 1) as usize ][ (window_height / scale / 2 + 1) as usize ] = Tile::Alive;
+
+        Board {
+            scale: scale as f64,
+            tile_width: (window_width / scale) as i32,
+            tile_height: (window_height / scale) as i32,
+            tiles: starting_tiles
+        }
+    }
+
+    #[allow(dead_code)]
+    fn new_empty(scale: u32, window_width: u32, window_height: u32) -> Board {
+
+        let mut starting_tiles = Vec::new();
+
+        for width in 0..window_width / scale {
+            starting_tiles.push(Vec::with_capacity((window_height / scale) as usize));
+
+            for _ in 0..window_height / scale {
+                starting_tiles[width as usize].push(Tile::Dead);
+            }
+        }
+
+
+        Board {
+            scale: scale as f64,
+            tile_width: (window_width / scale) as i32,
+            tile_height: (window_height / scale) as i32,
+            tiles: starting_tiles
+        }
+    }
+
+
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
         // println!("Board Render");
 
@@ -119,9 +170,7 @@ impl Board {
 
                 let new_tile = match adjacent_tiles {
                     x if x < 2 => Tile::Dead,
-                    x if (x == 2 || x == 3) && self.tiles[x_across][y_down] != Tile::Dead => {
-                        Tile::Alive
-                    }
+                    x if (x == 2 || x == 3) && self.tiles[x_across][y_down] != Tile::Dead => Tile::Alive,                    
                     x if x > 3 => Tile::Dead,
                     x if x == 3 && self.tiles[x_across][y_down] == Tile::Dead => Tile::Alive,
                     _ => Tile::Dead,
@@ -199,7 +248,7 @@ enum Tile {
 }
 
 fn main() {
-    let opengl = OpenGL::V3_2;
+    let opengl = OpenGL::V4_5;
 
     let window_width = 1000;
     let window_height = 750;
@@ -211,44 +260,17 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut starting_tiles = Vec::new();
-
-    for width in 0..window_width / scale {
-        starting_tiles.push(Vec::with_capacity((window_height / scale) as usize));
-
-        for _ in 0..window_height / scale {
-            starting_tiles[width as usize].push(Tile::Dead);
-        }
-    }
-
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2) as usize] =
-        Tile::Alive;
-    starting_tiles[(window_width / scale / 2 + 1) as usize][(window_height / scale / 2) as usize] =
-        Tile::Alive;
-    starting_tiles[(window_width / scale / 2 + 2) as usize][(window_height / scale / 2) as usize] =
-        Tile::Alive;
-
-    starting_tiles[(window_width / scale / 2 - 1) as usize]
-        [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
-    starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2 + 1) as usize] =
-        Tile::Alive;
-    starting_tiles[(window_width / scale / 2 + 1) as usize]
-        [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+    let board: Board = Board::new(scale, window_width, window_height);
 
     let mut game = Game {
         gl: GlGraphics::new(opengl),
-        board: Board {
-            tiles: starting_tiles,
-            scale: scale as f64,
-            tile_width: (window_width / scale) as i32,
-            tile_height: (window_height / scale) as i32,
-        },
+        board: board,
         running: true,
     };
 
-    let mut event_settings = EventSettings::new();
-    event_settings.ups = 4;
-    event_settings.max_fps = 250;
+    let mut event_settings     = EventSettings::new();
+        event_settings.ups     = 4;
+        event_settings.max_fps = 250;
 
     let mut last_mouse_location: Option<[f64; 2]> = None;
 
@@ -264,24 +286,18 @@ fn main() {
             }
         }
 
-        // println!("Events Called: {:?}", e);
-
         match e {
             Event::Input(Input::Move(Motion::MouseCursor(x, y))) => last_mouse_location = Some([x, y]),
             _ => {}
         }
 
         if let Some(s) = e.mouse_scroll_args() {
-
             let mut event_settings = events.get_event_settings();
             match s[1] as i32 {
                 1 => events.set_ups(event_settings.ups + 1),
                 -1 if event_settings.ups > 0 => events.set_ups(event_settings.ups - 1),
                 _ => {}
             }
-            
-
-
         }
 
         if let Some(b) = e.button_args() {
