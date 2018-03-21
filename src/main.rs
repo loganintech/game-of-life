@@ -258,7 +258,7 @@ fn main() {
         .opengl(opengl)
         .exit_on_esc(true)
         .build()
-        .unwrap();
+        .unwrap_or_else(|err| { panic!("Failed to build piston window. You may need to disable HDR. Full error: {}", err) });
 
     let board: Board = Board::new(scale, window_width, window_height);
 
