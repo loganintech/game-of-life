@@ -57,6 +57,10 @@ impl Game {
             }
         }
     }
+
+    fn resize_board(&mut self, window_dimensions: [u32; 2]) {
+        self.board.resize_board(window_dimensions);
+    }
 }
 
 struct Board {
@@ -127,25 +131,25 @@ impl Board {
 
         let mut squares: Vec<Vec<graphics::types::Rectangle>> = Vec::new();
 
-        for x in 0..self.tiles.len() {
-            squares.push(Vec::new());
+        self.tiles.iter().enumerate().for_each(|(x, tile_list)| {
+            let mut this_list = Vec::new();
 
-            for y in 0..self.tiles[x].len() {
-                squares[x].push(graphics::rectangle::square(
+            tile_list.iter().enumerate().for_each(|(y, _)| {
+                this_list.push(graphics::rectangle::square(
                     x as f64 * self.scale as f64,
                     y as f64 * self.scale as f64,
                     self.scale,
                 ));
-            }
-        }
+            });
+
+            squares.push(this_list);
+        });
 
         gl.draw(args.viewport(), |c, gl| {
             let transform = c.transform;
 
             self.tiles.iter().enumerate().for_each(|(x, tile_array)| {
-
                 tile_array.iter().enumerate().for_each(|(y, &tile)| {
-
                     let color = match tile {
                         Tile::Alive => white,
                         Tile::Dead => black,
@@ -153,26 +157,21 @@ impl Board {
 
                     graphics::rectangle(color, squares[x][y], transform, gl)
                 });
-
             });
-
         });
 
         // println!("{:?}", self.tiles);
     }
 
     fn update(&mut self, _args: &UpdateArgs) -> bool {
-
         self.tiles = self.tiles
             .iter()
             .enumerate()
             .map(|(x_across, tile_array)| {
-
                 tile_array
                     .iter()
                     .enumerate()
                     .map(|(y_down, &tile)| {
-
                         let adjacent_tiles =
                             self.get_adjacent_tiles(x_across as i32, y_down as i32);
 
@@ -185,19 +184,46 @@ impl Board {
                         };
 
                         new_tile
-
                     })
                     .collect()
-
             })
             .collect();
 
         true
     }
 
+    fn resize_board(&mut self, window_dimensions: [u32; 2]) {
+        let scale = self.scale as u32;
+        let window_width = window_dimensions[0];
+        let window_height = window_dimensions[1];
+
+        let mut new_tiles = Vec::new();
+
+        let horizontal_capacity = (window_width / scale) as usize;
+        let vertical_capacity = (window_height / scale) as usize;
+
+        for width in 0..horizontal_capacity {
+            new_tiles.push(Vec::new());//Vec::with_capacity(horizontal_capacity + 1));
+
+            for height in 0..vertical_capacity {
+                new_tiles[width as usize].push(
+                    self.tiles
+                        .get(width as usize)
+                        .unwrap()
+                        .get(height as usize)
+                        //Find a way to do this safely without referencing stuff
+                        .unwrap_or(Tile::Dead)
+                );
+            }
+        }
+
+        self.tiles = new_tiles;
+    }
+
     fn get_adjacent_tiles(&self, x_across: i32, y_down: i32) -> i32 {
         let mut adjacent: i32 = 0;
 
+        //Convert these checks to .get functions for S A F E T Y
         if x_across > 0 {
             //Top left
             if y_down > 0 && self.tiles[x_across as usize - 1][y_down as usize - 1] == Tile::Alive {
@@ -291,14 +317,18 @@ fn main() {
 
     let mut events = Events::new(event_settings);
     while let Some(e) = events.next(&mut window) {
-        if let Some(r) = e.render_args() {
-            game.render(&r);
+        if let Some(w) = e.resize_args() {
+            game.resize_board(w);
         }
 
         if let Some(u) = e.update_args() {
             if !game.update(&u) {
                 break;
             }
+        }
+
+        if let Some(r) = e.render_args() {
+            game.render(&r);
         }
 
         match e {
