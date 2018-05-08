@@ -3,11 +3,11 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
 
-use piston::window::WindowSettings;
-use piston::event_loop::*;
-use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL};
+use piston::event_loop::*;
+use piston::input::*;
+use piston::window::WindowSettings;
 
 pub struct Game {
     gl: GlGraphics,
@@ -45,7 +45,6 @@ impl Game {
         }
 
         if let Some(m) = mouse_pos {
-
             if btn == &Button::Mouse(MouseButton::Left) {
                 let x_across = m[0] / self.board.scale;
                 let y_down = m[1] / self.board.scale;
@@ -68,9 +67,7 @@ struct Board {
 }
 
 impl Board {
-
     fn new(scale: u32, window_width: u32, window_height: u32) -> Board {
-
         let mut starting_tiles = Vec::new();
 
         for width in 0..window_width / scale {
@@ -81,24 +78,29 @@ impl Board {
             }
         }
 
-        starting_tiles[ (window_width / scale / 2)     as usize ][ (window_height / scale / 2)     as usize ] = Tile::Alive;
-        starting_tiles[ (window_width / scale / 2 + 1) as usize ][ (window_height / scale / 2)     as usize ] = Tile::Alive;
-        starting_tiles[ (window_width / scale / 2 + 2) as usize ][ (window_height / scale / 2)     as usize ] = Tile::Alive;
-        starting_tiles[ (window_width / scale / 2 - 1) as usize ][ (window_height / scale / 2 + 1) as usize ] = Tile::Alive;
-        starting_tiles[ (window_width / scale / 2)     as usize ][ (window_height / scale / 2 + 1) as usize ] = Tile::Alive;
-        starting_tiles[ (window_width / scale / 2 + 1) as usize ][ (window_height / scale / 2 + 1) as usize ] = Tile::Alive;
+        starting_tiles[(window_width / scale / 2) as usize][(window_height / scale / 2) as usize] =
+            Tile::Alive;
+        starting_tiles[(window_width / scale / 2 + 1) as usize]
+            [(window_height / scale / 2) as usize] = Tile::Alive;
+        starting_tiles[(window_width / scale / 2 + 2) as usize]
+            [(window_height / scale / 2) as usize] = Tile::Alive;
+        starting_tiles[(window_width / scale / 2 - 1) as usize]
+            [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+        starting_tiles[(window_width / scale / 2) as usize]
+            [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
+        starting_tiles[(window_width / scale / 2 + 1) as usize]
+            [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
 
         Board {
             scale: scale as f64,
             tile_width: (window_width / scale) as i32,
             tile_height: (window_height / scale) as i32,
-            tiles: starting_tiles
+            tiles: starting_tiles,
         }
     }
 
     #[allow(dead_code)]
     fn new_empty(scale: u32, window_width: u32, window_height: u32) -> Board {
-
         let mut starting_tiles = Vec::new();
 
         for width in 0..window_width / scale {
@@ -109,15 +111,13 @@ impl Board {
             }
         }
 
-
         Board {
             scale: scale as f64,
             tile_width: (window_width / scale) as i32,
             tile_height: (window_height / scale) as i32,
-            tiles: starting_tiles
+            tiles: starting_tiles,
         }
     }
-
 
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
         // println!("Board Render");
@@ -142,45 +142,55 @@ impl Board {
         gl.draw(args.viewport(), |c, gl| {
             let transform = c.transform;
 
-            for x in 0..self.tiles.len() {
-                for y in 0..self.tiles[x].len() {
-                    let new_tile = self.tiles[x][y];
+            self.tiles.iter().enumerate().for_each(|(x, tile_array)| {
 
-                    let color = match new_tile {
+                tile_array.iter().enumerate().for_each(|(y, &tile)| {
+
+                    let color = match tile {
                         Tile::Alive => white,
                         Tile::Dead => black,
                     };
 
                     graphics::rectangle(color, squares[x][y], transform, gl)
-                }
-            }
+                });
+
+            });
+
         });
 
         // println!("{:?}", self.tiles);
     }
 
     fn update(&mut self, _args: &UpdateArgs) -> bool {
-        let mut new_tiles: Vec<Vec<Tile>> = Vec::new();
 
-        for x_across in 0..self.tiles.len() {
-            new_tiles.push(Vec::new());
+        self.tiles = self.tiles
+            .iter()
+            .enumerate()
+            .map(|(x_across, tile_array)| {
 
-            for y_down in 0..self.tiles[x_across].len() {
-                let adjacent_tiles = self.get_adjacent_tiles(x_across as i32, y_down as i32);
+                tile_array
+                    .iter()
+                    .enumerate()
+                    .map(|(y_down, &tile)| {
 
-                let new_tile = match adjacent_tiles {
-                    x if x < 2 => Tile::Dead,
-                    x if (x == 2 || x == 3) && self.tiles[x_across][y_down] != Tile::Dead => Tile::Alive,                    
-                    x if x > 3 => Tile::Dead,
-                    x if x == 3 && self.tiles[x_across][y_down] == Tile::Dead => Tile::Alive,
-                    _ => Tile::Dead,
-                };
+                        let adjacent_tiles =
+                            self.get_adjacent_tiles(x_across as i32, y_down as i32);
 
-                new_tiles[x_across].push(new_tile);
-            }
-        }
+                        let new_tile = match adjacent_tiles {
+                            x if x < 2 => Tile::Dead,
+                            x if (x == 2 || x == 3) && tile != Tile::Dead => Tile::Alive,
+                            x if x > 3 => Tile::Dead,
+                            x if x == 3 && tile == Tile::Dead => Tile::Alive,
+                            _ => Tile::Dead,
+                        };
 
-        self.tiles = new_tiles;
+                        new_tile
+
+                    })
+                    .collect()
+
+            })
+            .collect();
 
         true
     }
@@ -258,7 +268,12 @@ fn main() {
         .opengl(opengl)
         .exit_on_esc(true)
         .build()
-        .unwrap_or_else(|err| { panic!("Failed to build piston window. You may need to disable HDR. Full error: {}", err) });
+        .unwrap_or_else(|err| {
+            panic!(
+                "Failed to build piston window. You may need to disable HDR. Full error: {}",
+                err
+            )
+        });
 
     let board: Board = Board::new(scale, window_width, window_height);
 
@@ -268,9 +283,9 @@ fn main() {
         running: true,
     };
 
-    let mut event_settings     = EventSettings::new();
-        event_settings.ups     = 4;
-        event_settings.max_fps = 250;
+    let mut event_settings = EventSettings::new();
+    event_settings.ups = 4;
+    event_settings.max_fps = 250;
 
     let mut last_mouse_location: Option<[f64; 2]> = None;
 
@@ -287,7 +302,9 @@ fn main() {
         }
 
         match e {
-            Event::Input(Input::Move(Motion::MouseCursor(x, y))) => last_mouse_location = Some([x, y]),
+            Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
+                last_mouse_location = Some([x, y])
+            }
             _ => {}
         }
 
@@ -302,9 +319,7 @@ fn main() {
 
         if let Some(b) = e.button_args() {
             if b.state == ButtonState::Press {
-
                 game.input(&b.button, last_mouse_location);
-
             }
         }
     }
