@@ -46,14 +46,15 @@ impl Game {
 
         if let Some(m) = mouse_pos {
             if btn == &Button::Mouse(MouseButton::Left) {
-                let x_across = m[0] / self.board.scale;
-                let y_down = m[1] / self.board.scale;
+                let x_across = (m[0] / self.board.scale) as usize;
+                let y_down = (m[1] / self.board.scale) as usize;
 
-                self.board.tiles[x_across as usize][y_down as usize] =
-                    match self.board.tiles[x_across as usize][y_down as usize] {
+                if x_across < self.board.tiles.len() && y_down < self.board.tiles[x_across].len() {
+                    self.board.tiles[x_across][y_down] = match self.board.tiles[x_across][y_down] {
                         Tile::Alive => Tile::Dead,
                         Tile::Dead => Tile::Alive,
                     };
+                }
             }
         }
     }
@@ -203,21 +204,26 @@ impl Board {
         let vertical_capacity = (window_height / scale) as usize;
 
         for width in 0..horizontal_capacity {
-            new_tiles.push(Vec::new());//Vec::with_capacity(horizontal_capacity + 1));
+            new_tiles.push(Vec::new()); //Vec::with_capacity(horizontal_capacity + 1));
 
             for height in 0..vertical_capacity {
-                new_tiles[width as usize].push(
-                    self.tiles
-                        .get(width as usize)
-                        .unwrap()
-                        .get(height as usize)
-                        //Find a way to do this safely without referencing stuff
-                        .unwrap_or(Tile::Dead)
-                );
+                if self.tiles.len() > width {
+                    // println!("Tile Column Within Width: {}", width);
+                    if self.tiles[width].len() > height {
+                        // println!("Tile Within Height: {:?}", self.tiles[width][height]);
+                        new_tiles[width as usize].push(self.tiles[width][height]);
+                    } else {
+                        new_tiles[width as usize].push(Tile::Dead);
+                    }
+                } else {
+                    new_tiles[width as usize].push(Tile::Dead);
+                }
             }
         }
 
         self.tiles = new_tiles;
+        self.tile_height = vertical_capacity as i32;
+        self.tile_width  = horizontal_capacity as i32;
     }
 
     fn get_adjacent_tiles(&self, x_across: i32, y_down: i32) -> i32 {
@@ -331,11 +337,8 @@ fn main() {
             game.render(&r);
         }
 
-        match e {
-            Event::Input(Input::Move(Motion::MouseCursor(x, y))) => {
-                last_mouse_location = Some([x, y])
-            }
-            _ => {}
+        if let Some(pos) = e.mouse_cursor_args() {
+            last_mouse_location = Some(pos);
         }
 
         if let Some(s) = e.mouse_scroll_args() {
