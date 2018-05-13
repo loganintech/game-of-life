@@ -18,6 +18,40 @@
 				"panel": "dedicated"
 			},
 			"problemMatcher": []
+		},
+		{
+			"label": "Rust: cargo build",
+			"type": "shell",
+			"command": "cargo",
+			"args": [
+				"build"
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "dedicated"
+			},
+			"problemMatcher": "$rustc",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "Rust: cargo run",
+			"type": "shell",
+			"command": "cargo",
+			"args": [
+				"run"
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "never",
+				"focus": false,
+				"panel": "dedicated"
+			},
+			"problemMatcher": "$rustc",
 		}
 	]
 }
