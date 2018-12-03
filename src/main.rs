@@ -9,6 +9,8 @@ use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
 
+const OPENGL: OpenGL = OpenGL::V4_5;
+
 pub struct Game {
     gl: GlGraphics,
     board: Board,
@@ -143,9 +145,7 @@ impl Board {
             let transform = c.transform;
 
             self.tiles.iter().enumerate().for_each(|(x, tile_array)| {
-
                 tile_array.iter().enumerate().for_each(|(y, &tile)| {
-
                     let color = match tile {
                         Tile::Alive => white,
                         Tile::Dead => black,
@@ -153,26 +153,22 @@ impl Board {
 
                     graphics::rectangle(color, squares[x][y], transform, gl)
                 });
-
             });
-
         });
 
         // println!("{:?}", self.tiles);
     }
 
     fn update(&mut self, _args: &UpdateArgs) -> bool {
-
-        self.tiles = self.tiles
+        self.tiles = self
+            .tiles
             .iter()
             .enumerate()
             .map(|(x_across, tile_array)| {
-
                 tile_array
                     .iter()
                     .enumerate()
                     .map(|(y_down, &tile)| {
-
                         let adjacent_tiles =
                             self.get_adjacent_tiles(x_across as i32, y_down as i32);
 
@@ -185,10 +181,8 @@ impl Board {
                         };
 
                         new_tile
-
                     })
                     .collect()
-
             })
             .collect();
 
@@ -258,14 +252,25 @@ enum Tile {
 }
 
 fn main() {
-    let opengl = OpenGL::V4_5;
-
     let window_width = 1000;
     let window_height = 750;
     let scale = 10;
 
-    let mut window: Window = WindowSettings::new("game-of-life", [window_width, window_height])
-        .opengl(opengl)
+    let window = get_window(window_width, window_height);
+    let board: Board = Board::new(scale, window_width, window_height);
+    let game = Game {
+        gl: GlGraphics::new(OPENGL),
+        board: board,
+        running: true,
+    };
+
+    let event_settings = get_event_settings();
+    game_loop(game, event_settings, window)
+}
+
+fn get_window(width: u32, height: u32) -> Window {
+    WindowSettings::new("game-of-life", [width, height])
+        .opengl(OPENGL)
         .exit_on_esc(true)
         .build()
         .unwrap_or_else(|err| {
@@ -273,22 +278,19 @@ fn main() {
                 "Failed to build piston window. You may need to disable HDR. Full error: {}",
                 err
             )
-        });
+        })
+}
 
-    let board: Board = Board::new(scale, window_width, window_height);
-
-    let mut game = Game {
-        gl: GlGraphics::new(opengl),
-        board: board,
-        running: true,
-    };
-
+fn get_event_settings() -> EventSettings {
     let mut event_settings = EventSettings::new();
     event_settings.ups = 4;
     event_settings.max_fps = 250;
 
-    let mut last_mouse_location: Option<[f64; 2]> = None;
+    event_settings
+}
 
+fn game_loop(mut game: Game, event_settings: EventSettings, mut window: Window) {
+    let mut last_mouse_location: Option<[f64; 2]> = None;
     let mut events = Events::new(event_settings);
     while let Some(e) = events.next(&mut window) {
         if let Some(r) = e.render_args() {
