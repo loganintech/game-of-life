@@ -19,8 +19,6 @@ pub struct Game {
 
 impl Game {
     fn render(&mut self, arg: &RenderArgs) {
-        use graphics;
-
         // let white: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
         let black: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
@@ -46,10 +44,15 @@ impl Game {
             self.running = !self.running;
         }
 
+        if btn == &Button::Keyboard(Key::R) {
+            let new_board = Board::new_empty(self.board.scale, self.board.tile_width * self.board.scale, self.board.tile_height * self.board.scale);
+            self.board = new_board;
+        }
+
         if let Some(m) = mouse_pos {
             if btn == &Button::Mouse(MouseButton::Left) {
-                let x_across = m[0] / self.board.scale;
-                let y_down = m[1] / self.board.scale;
+                let x_across = m[0] / self.board.scale as f64;
+                let y_down = m[1] / self.board.scale as f64;
 
                 self.board.tiles[x_across as usize][y_down as usize] =
                     match self.board.tiles[x_across as usize][y_down as usize] {
@@ -63,9 +66,9 @@ impl Game {
 
 struct Board {
     tiles: Vec<Vec<Tile>>,
-    scale: f64,
-    tile_width: i32,
-    tile_height: i32,
+    scale: u32,
+    tile_width: u32,
+    tile_height: u32,
 }
 
 impl Board {
@@ -94,9 +97,9 @@ impl Board {
             [(window_height / scale / 2 + 1) as usize] = Tile::Alive;
 
         Board {
-            scale: scale as f64,
-            tile_width: (window_width / scale) as i32,
-            tile_height: (window_height / scale) as i32,
+            scale: scale,
+            tile_width: (window_width / scale) as u32,
+            tile_height: (window_height / scale) as u32,
             tiles: starting_tiles,
         }
     }
@@ -114,9 +117,9 @@ impl Board {
         }
 
         Board {
-            scale: scale as f64,
-            tile_width: (window_width / scale) as i32,
-            tile_height: (window_height / scale) as i32,
+            scale: scale,
+            tile_width: window_width / scale,
+            tile_height: window_height / scale,
             tiles: starting_tiles,
         }
     }
@@ -136,7 +139,7 @@ impl Board {
                 squares[x].push(graphics::rectangle::square(
                     x as f64 * self.scale as f64,
                     y as f64 * self.scale as f64,
-                    self.scale,
+                    self.scale as f64,
                 ));
             }
         }
@@ -170,7 +173,7 @@ impl Board {
                     .enumerate()
                     .map(|(y_down, &tile)| {
                         let adjacent_tiles =
-                            self.get_adjacent_tiles(x_across as i32, y_down as i32);
+                            self.get_adjacent_tiles(x_across as u32, y_down as u32);
 
                         let new_tile = match adjacent_tiles {
                             x if x < 2 => Tile::Dead,
@@ -189,8 +192,8 @@ impl Board {
         true
     }
 
-    fn get_adjacent_tiles(&self, x_across: i32, y_down: i32) -> i32 {
-        let mut adjacent: i32 = 0;
+    fn get_adjacent_tiles(&self, x_across: u32, y_down: u32) -> u32 {
+        let mut adjacent: u32 = 0;
 
         if x_across > 0 {
             //Top left
@@ -311,7 +314,7 @@ fn game_loop(mut game: Game, event_settings: EventSettings, mut window: Window) 
         }
 
         if let Some(s) = e.mouse_scroll_args() {
-            let mut event_settings = events.get_event_settings();
+            let event_settings = events.get_event_settings();
             match s[1] as i32 {
                 1 => events.set_ups(event_settings.ups + 1),
                 -1 if event_settings.ups > 0 => events.set_ups(event_settings.ups - 1),
